@@ -75,6 +75,7 @@ extension StateOnContext on BuildContext {
     return TProvider.fo<T>(this)!;
   }
 
+  /// Resets a given type R to it's default value
   reset<R extends Object>() {
     if (tGetIt().isRegistered<R>()) {
       tGetIt().resetLazySingleton<R>();
@@ -82,11 +83,21 @@ extension StateOnContext on BuildContext {
         tWState<R>().rebuild();
         tUpdateListeners<R>();
       });
+    } else {
+      /// type wasn't registered with GetIt, find it and rebuild
+      R? v = find<R>();
+      if (v != null) {
+        tWState<R>().rebuild();
+        tUpdateListeners<R>();
+      }
     }
   }
 
+  /// Resets All registered and Provided states
+  /// This feature only reset (and not unregister) all GetIt lazySinglitons
+  /// It also resets all provided states.
+  /// i.e calls create functions of each provider again
   resetAll() async {
-    // This feature only reset (and not unregister) all lazySinglitons
     for (TDependencyNotifier d in GetItExtension.dependencyNotifiers.values) {
       d.reset(this);
     }
