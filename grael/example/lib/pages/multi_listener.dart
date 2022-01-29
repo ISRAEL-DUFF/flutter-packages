@@ -6,6 +6,7 @@ import 'dart:math';
 class DemoMultiListener extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var p = ValueNotifier(5);
     // Multiple listeners
     return TMultiListenableBuilder(
         values: [
@@ -22,6 +23,9 @@ class DemoMultiListener extends StatelessWidget {
             value: SomeModel(),
           ),
           TListenable<SomeOtherModel>(),
+
+          /// You can also use value notifier if you wish
+          context.value(value: p)
         ],
         builder: (context, find, _) {
           /// the [find] fn works same as context.find except that it can only
@@ -69,9 +73,11 @@ class DemoMultiListener extends StatelessWidget {
                         onPressed: () {
                           int a = Random().nextInt(500);
                           accountInfo.setAccount('ACCT-' + a.toString());
+                          p.value = Random().nextInt(500);
                         },
                         child: Text('Change ACCT')),
-                    Text('Account Number: ${accountInfo.accountNum}'),
+                    Text(
+                        'Account Number: ${accountInfo.accountNum}, P: ${p.value}'),
                   ],
                 )),
                 Container(
