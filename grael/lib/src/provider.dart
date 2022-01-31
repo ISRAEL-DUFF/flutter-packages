@@ -371,3 +371,141 @@ class TMultiListenableBuilderState extends State<TMultiListenableBuilder>
     }
   }
 }
+
+/// Experimental
+/// this is also TMultiListenableBuilder, but one that uses a dynamic function
+/// for it's builder parameter.
+/// Note: this tries to mimic Provider's builder function
+class MultiListenableBuilder extends StatefulWidget {
+  final Function builder;
+  final Widget? child;
+  final List<TListenable> values;
+  const MultiListenableBuilder(
+      {Key? key, required this.values, required this.builder, this.child})
+      : super(key: key);
+  @override
+  MultiListenableBuilderState createState() => MultiListenableBuilderState();
+}
+
+class MultiListenableBuilderState extends State<MultiListenableBuilder>
+    with TypeCheck {
+  bool initialized = false;
+  List<TListenable>? values;
+  int buildValue = Random().nextInt(500);
+  late Function builder;
+  var fnArgs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    values = widget.values;
+    builder = widget.builder;
+  }
+
+  @override
+  void didUpdateWidget(MultiListenableBuilder oldWidget) {
+    print('widget UPDated');
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void didChangeDependencies() {
+    debugPrint('buildValue: $buildValue ... Dependency changed');
+
+    // change dependencies here
+    if (!initialized) {
+      initListeners();
+    }
+
+    // finally call super
+    super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    unsubscribeFromEvents();
+    debugPrint('buildValue: $buildValue ... Widget State Disposed');
+  }
+
+  void unsubscribeFromEvents() {
+    debugPrint('buildValue: $buildValue ... Unsubscribing');
+    for (TListenable l in values!) {
+      l.removeListener(onUpdate: listenForUpdate, onReset: listenForRebuild);
+    }
+
+    /// clear the function args list
+    fnArgs = [];
+  }
+
+  void subscribeToEvents([resubscription = false]) {
+    debugPrint('buildValue: $buildValue ... Subscribing');
+
+    /// make 1st arg a BuildContext
+    fnArgs.add(context);
+
+    for (TListenable l in values!) {
+      if (l.shouldGetValueFromProvider) {
+        l.getValueFromProvider(context);
+      }
+      l.addListener(onUpdate: listenForUpdate, onReset: listenForRebuild);
+      fnArgs.add(l.value);
+    }
+
+    /// finally, make the last arg the child widget
+    fnArgs.add(widget.child);
+  }
+
+  initListeners([bool watchRebuild = false]) {
+    // listen for individual changes in listeners
+    subscribeToEvents();
+    initialized = true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildTree();
+  }
+
+  Widget _buildTree({int i = 0}) {
+    if (i < values!.length - 1) {
+      return Builder(builder: (context) {
+        return _buildTree(i: i + 1);
+      });
+    } else {
+      return Builder(builder: (context) {
+        var w = Function.apply(builder, fnArgs);
+        if (w is Widget) {
+          return w;
+        } else {
+          throw ('$w is not a Widget');
+        }
+        // return widget.builder(context, find, widget.child);
+      });
+    }
+  }
+
+  listenForUpdate() {
+    debugPrint('buildValue: $buildValue ... Updated');
+    if (mounted) setState(() {});
+  }
+
+  listenForRebuild() {
+    debugPrint('buildValue: $buildValue ... Rebuilding');
+
+    /// unsubscribe from the old object
+    unsubscribeFromEvents();
+
+    /// resubscribe by setting this to 'false'
+    /// the resubscription will be taken care of in [didChangeDependencies()]
+    initialized = false;
+  }
+
+  T? find<T extends ChangeNotifier>() {
+    for (TListenable l in values!) {
+      if (l.value is T) {
+        return l.value as T;
+      }
+    }
+  }
+}

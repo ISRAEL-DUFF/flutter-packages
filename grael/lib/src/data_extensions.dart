@@ -123,3 +123,25 @@ extension StateOnContext on BuildContext {
     return TListenable(value: value);
   }
 }
+
+
+// class MyFunction{
+//   final MyFunction callback;
+//   MyFunction(this.callback);
+//   static var _offset = 'Symbol("'.length;
+
+//   Widget call(a, b) => callback([], {});
+
+//   @override
+//   dynamic noSuchMethod(Invocation invocation) {
+//     return callback(
+//       invocation.positionalArguments,
+//       invocation.namedArguments.map(
+//         (_k, v) {
+//           var k = _k.toString();
+//           return MapEntry(k.substring(_offset, k.length - 2), v);
+//         },
+//       ),
+//     );
+//   }
+// }
