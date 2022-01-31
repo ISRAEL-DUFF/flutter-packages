@@ -23,6 +23,11 @@ class MyHomePage extends StatelessWidget {
                 Navigator.of(context).popAndPushNamed('/page2');
               },
               child: const Text('Goto Page 2')),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/page3');
+              },
+              child: const Text('Goto Page 3')),
           const Center(child: Text('Testing Inhrited widget')),
           Row(
             children: [
