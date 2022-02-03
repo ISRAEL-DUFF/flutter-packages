@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:grael/grael.dart';
 import '../model.dart';
 
-import './multi_listener.dart';
-
 class DemoPage3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -11,7 +9,6 @@ class DemoPage3 extends StatelessWidget {
     var p = ValueNotifier(6);
     var p2 = ValueNotifier("Some string");
     return Scaffold(
-      // appBar: AppBar(title: Text('Cashly App')),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -52,8 +49,8 @@ class DemoPage3 extends StatelessWidget {
                 context.value(value: p),
                 context.value(value: p2)
               ],
-              builder: (context, prov1, prov2, prov3, prov4, prov5, prov6,
-                  prov7, _) {
+              builder: (BuildContext context, value1, value2, value3, value4,
+                  value5, value6, value7, Widget child) {
                 print('BUILDING MultiList 2');
 
                 return Column(
@@ -62,30 +59,30 @@ class DemoPage3 extends StatelessWidget {
                       children: [
                         ElevatedButton(
                             onPressed: () {
-                              prov1.randomUpdate();
+                              value1.randomUpdate();
                             },
                             child: const Text('SomeOtherModel')),
-                        Text(' : ${prov1.id}')
+                        Text(' : ${value1.id}')
                       ],
                     ),
                     Row(
                       children: [
                         ElevatedButton(
                             onPressed: () {
-                              prov2.randomUpdate();
+                              value2.randomUpdate();
                             },
                             child: const Text('Update MyData3')),
-                        Text(' : ${prov2.id}')
+                        Text(' : ${value2.id}')
                       ],
                     ),
                     Row(
                       children: [
                         ElevatedButton(
                             onPressed: () {
-                              prov4.randomUpdate();
+                              value4.randomUpdate();
                             },
                             child: const Text('Update SomeModel')),
-                        Text(' : ${prov4.id}')
+                        Text(' : ${value4.id}')
                       ],
                     )
                   ],

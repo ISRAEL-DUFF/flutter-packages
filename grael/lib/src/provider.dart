@@ -248,7 +248,16 @@ class TListenable<T extends ChangeNotifier> with TypeCheck {
   }
 }
 
+/// This widget works like [ValueListenableBuilder], but with multiple values.
+/// The values listenable are provided via the required [values] parameter.
+/// The [builder] callback function has the signature
+/// Function(BuildContext context, Function find, Widget child)
 ///
+/// The [values] contains any [ChangeNotifier] or it's subType.
+/// The [find] function parameter works same as context.find except that it can only
+/// find [values] you supplied to this Widget.
+/// NOTE: if all the values you are listening on are already provided via inherited widget,
+/// then ignore the find and use context.find instead
 class TMultiListenableBuilder extends StatefulWidget {
   final Widget Function(
       BuildContext, T? Function<T extends ChangeNotifier>(), Widget?) builder;
@@ -349,6 +358,7 @@ class TMultiListenableBuilderState extends State<TMultiListenableBuilder>
     initialized = false;
   }
 
+  /// The [find] function. It only searches the [values] supplied
   T? find<T extends ChangeNotifier>() {
     for (TListenable l in values!) {
       if (l.value is T) {
@@ -359,7 +369,7 @@ class TMultiListenableBuilderState extends State<TMultiListenableBuilder>
 }
 
 /// Experimental
-/// this is also TMultiListenableBuilder, but one that uses a dynamic function
+/// this is also [TMultiListenableBuilder], but one that uses a dynamic function
 /// for it's builder parameter.
 /// Note: this tries to mimic Provider's builder function
 class MultiListenableBuilder extends StatefulWidget {
