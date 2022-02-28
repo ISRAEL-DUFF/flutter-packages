@@ -42,8 +42,7 @@ class MyApp extends StatelessWidget {
           )
         ],
         child: MaterialApp(
-          title: 'Grael Statementent',
-          // home: MyHomePage(),
+          title: 'Grael Statemanagement',
           routes: routes,
         ));
   }

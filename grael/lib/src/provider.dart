@@ -12,6 +12,8 @@ debugPrint(Object? object) {
 
 typedef Create<R> = R Function(BuildContext context);
 
+/// A wrapper widget arround TProvider widget
+/// This widget simply creates a key (when non is given) for the TProvider
 class Grael<T extends ChangeNotifier> extends StatelessWidget {
   Widget? child;
   Create<T> create;
@@ -26,14 +28,13 @@ class Grael<T extends ChangeNotifier> extends StatelessWidget {
   }
 }
 
+/// The baseline wrapper widget for Inherited widget TInheritedWidget
 class TProvider<T extends ChangeNotifier> extends StatefulWidget {
   Widget? child;
   Create<T> create;
 
   static List<Widget> allProviders = [];
   TProvider({Key? key, required this.create, this.child}) : super(key: key) {
-    // _k = key;
-    // _id = allProviders.length;
     allProviders.add(this);
     GetItExtension.registerAnewType<T>();
   }
@@ -87,6 +88,8 @@ class TProviderState<T> extends State<TProvider> {
       TInheritedWidget(child: widget.child, data: data, state: this);
 }
 
+/// The inherited widget used in TProvider
+/// This widget has a minimal interface
 class TInheritedWidget<T> extends InheritedWidget {
   final T? data;
   final TProviderState? state;
@@ -109,6 +112,9 @@ class TInheritedWidget<T> extends InheritedWidget {
   }
 }
 
+/// A wrapper widget for multiple TProviders
+/// this widget combines all widgets (from GetIt and also the ones)
+/// given via the [providers] field
 class TMultiprovider extends StatelessWidget {
   final Widget? child;
   List<Widget>? providers = [];
@@ -242,27 +248,16 @@ class TListenable<T extends ChangeNotifier> with TypeCheck {
   }
 }
 
-// class MultiListenableBuilder extends StatelessWidget {
-//   final Widget Function(
-//       BuildContext, T? Function<T extends ChangeNotifier>(), Widget?) builder;
-//   final Widget? child;
-//   final List<TListenable> values;
-//   Key? gkey;
-
-//   MultiListenableBuilder(
-//       {Key? key, required this.values, required this.builder, this.child}) {
-//     gkey = key ?? GlobalKey<TMultiListenableBuilderState>();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) => TMultiListenableBuilder(
-//         key: gkey,
-//         values: values,
-//         builder: builder,
-//         child: child,
-//       );
-// }
-
+/// This widget works like [ValueListenableBuilder], but with multiple values.
+/// The values listenable are provided via the required [values] parameter.
+/// The [builder] callback function has the signature
+/// Function(BuildContext context, Function find, Widget child)
+///
+/// The [values] contains any [ChangeNotifier] or it's subType.
+/// The [find] function parameter works same as context.find except that it can only
+/// find [values] you supplied to this Widget.
+/// NOTE: if all the values you are listening on are already provided via inherited widget,
+/// then ignore the find and use context.find instead
 class TMultiListenableBuilder extends StatefulWidget {
   final Widget Function(
       BuildContext, T? Function<T extends ChangeNotifier>(), Widget?) builder;
@@ -363,6 +358,7 @@ class TMultiListenableBuilderState extends State<TMultiListenableBuilder>
     initialized = false;
   }
 
+  /// The [find] function. It only searches the [values] supplied
   T? find<T extends ChangeNotifier>() {
     for (TListenable l in values!) {
       if (l.value is T) {
@@ -373,7 +369,7 @@ class TMultiListenableBuilderState extends State<TMultiListenableBuilder>
 }
 
 /// Experimental
-/// this is also TMultiListenableBuilder, but one that uses a dynamic function
+/// this is also [TMultiListenableBuilder], but one that uses a dynamic function
 /// for it's builder parameter.
 /// Note: this tries to mimic Provider's builder function
 class MultiListenableBuilder extends StatefulWidget {
@@ -390,10 +386,20 @@ class MultiListenableBuilder extends StatefulWidget {
 class MultiListenableBuilderState extends State<MultiListenableBuilder>
     with TypeCheck {
   bool initialized = false;
+
+  /// List of listenable values.
+  /// Note: A listenable value is any Subtype of [ChangeNotifier] OR [ValueNotifier]
+  /// [TListenable] is just a wrapper arround the listenable type
   List<TListenable>? values;
   int buildValue = Random().nextInt(500);
+
+  /// The Builder Function.
+  /// The function is dynamic in that no param list or return type specified.
+  /// The arguments list is store in the [builderArgs] field
+  /// The order of the arguments or parameters is as follows
+  /// [builder(BuildContext context, T1, T2, T3,...,Tn, Widget child)]
   late Function builder;
-  var fnArgs = [];
+  var builderArgs = [];
 
   @override
   void initState() {
@@ -428,32 +434,40 @@ class MultiListenableBuilderState extends State<MultiListenableBuilder>
     debugPrint('buildValue: $buildValue ... Widget State Disposed');
   }
 
+  /// Remove old listeners when dependencies change.
+  /// This method also resets the [builderArgs] list.
   void unsubscribeFromEvents() {
     debugPrint('buildValue: $buildValue ... Unsubscribing');
     for (TListenable l in values!) {
       l.removeListener(onUpdate: listenForUpdate, onReset: listenForRebuild);
     }
 
-    /// clear the function args list
-    fnArgs = [];
+    /// reset the builderArgs list
+    builderArgs = [];
   }
 
+  /// Add listeners to the [TListenable] so it can be notified of changes within the listener
+  /// This method also populates the [builderArgs] list, setting the first param to be a
+  /// [BuildContext] and then setting intermediate values to be [TListenable]s
+  /// then finally sets last param to be a child [Widget]
   void subscribeToEvents([resubscription = false]) {
     debugPrint('buildValue: $buildValue ... Subscribing');
 
     /// make 1st arg a BuildContext
-    fnArgs.add(context);
+    builderArgs.add(context);
 
     for (TListenable l in values!) {
       if (l.shouldGetValueFromProvider) {
         l.getValueFromProvider(context);
       }
       l.addListener(onUpdate: listenForUpdate, onReset: listenForRebuild);
-      fnArgs.add(l.value);
+
+      /// set intermediate params to be [TListenable]
+      builderArgs.add(l.value);
     }
 
     /// finally, make the last arg the child widget
-    fnArgs.add(widget.child);
+    builderArgs.add(widget.child);
   }
 
   initListeners([bool watchRebuild = false]) {
@@ -474,13 +488,12 @@ class MultiListenableBuilderState extends State<MultiListenableBuilder>
       });
     } else {
       return Builder(builder: (context) {
-        var w = Function.apply(builder, fnArgs);
+        var w = Function.apply(builder, builderArgs);
         if (w is Widget) {
           return w;
         } else {
           throw ('$w is not a Widget');
         }
-        // return widget.builder(context, find, widget.child);
       });
     }
   }
@@ -499,13 +512,5 @@ class MultiListenableBuilderState extends State<MultiListenableBuilder>
     /// resubscribe by setting this to 'false'
     /// the resubscription will be taken care of in [didChangeDependencies()]
     initialized = false;
-  }
-
-  T? find<T extends ChangeNotifier>() {
-    for (TListenable l in values!) {
-      if (l.value is T) {
-        return l.value as T;
-      }
-    }
   }
 }

@@ -13,7 +13,10 @@ class DemoMultiListener extends StatelessWidget {
           /// this is same as: value = TProvider.of<MyData1>(context)
           /// OR: value = context.find<MyData1>()
           TListenable<MyData1>(),
-          TListenable<MyData2>(),
+
+          /// You can use context
+          /// i.e value = TListenable<MyData2>(),
+          context.value<MyData2>(),
 
           /// You can also explicitely specify value
           TListenable<AccountInfo>(
