@@ -12,6 +12,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'Trouter Example',
+
+        // ensure to add this line so you can use myRouter.pushNamed(), etc
+        navigatorKey: myRouter.navigatorKey,
         onGenerateInitialRoutes: myRouter.onGenerateInitialRoute,
         onGenerateRoute: myRouter.onGenerateRoute);
   }

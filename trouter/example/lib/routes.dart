@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:trouter/trouter.dart';
 
 const String INVITE_LINK = '/app/invite';
@@ -19,7 +20,8 @@ TRouter myRouter = TRouter(routes: {
         }
       },
       routes: {
-        '/': RouteRedirect(to: '/auth/login'),
+        // '/': RouteRedirect(to: '/auth/login'),
+        '/': (context) => TestPage(n: 48),
         '/register': (context) => TestPage(n: 50),
         '/login': (context) => TestPage(n: 51),
         '/otp': (context) => TestPage(n: 52),
@@ -70,12 +72,37 @@ TRouter myRouter = TRouter(routes: {
 // This function executes when the app Just launches
 class TestPage extends StatelessWidget {
   int n;
+  TextEditingController controller = TextEditingController();
   TestPage({this.n = 0});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         body: Center(
-      child: Text('Test Page ${n}'),
-    ));
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Text('Test Page ${n}'),
+      TextField(
+        controller: controller,
+      ),
+      Row(
+        children: [
+          ElevatedButton(
+              onPressed: () {
+                print('Pushing: ${controller.text}');
+                // Navigator.pushNamed(context, controller.text);
+                myRouter.pushNamed(controller.text);
+              },
+              child: const Text('Push Named')),
+          ElevatedButton(
+              onPressed: () {
+                print('Using Pushing: ${controller.text}');
+                myRouter.pushNamedAndRemoveUntil(controller.text, (route) {
+                  return false;
+                });
+              },
+              child: const Text('Push Named and Remove'))
+        ],
+      )
+    ])));
   }
 }

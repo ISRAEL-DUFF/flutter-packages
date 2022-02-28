@@ -303,6 +303,15 @@ class TRouter {
     return _rootNavigator.currentState!
         .pushNamed(routeName, arguments: settings);
   }
+
+  Future<dynamic> pushNamedAndRemoveUntil(
+      String routeName, bool Function(Route) predicate,
+      {dynamic arguments}) {
+    RouteSettings settings =
+        RouteSettings(name: routeName, arguments: arguments);
+    return _rootNavigator.currentState!
+        .pushNamedAndRemoveUntil(routeName, predicate, arguments: settings);
+  }
 }
 
 class Trouter {
